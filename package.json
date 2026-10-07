@@ -1,0 +1,31 @@
+{
+  "name": "bot-viagens",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Bot semi-automático de passagens baratas com aprovação humana e envio no WhatsApp.",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "mock": "tsx src/index.ts --once --mock",
+    "approve": "tsx src/index.ts --cli",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test src/offers/fingerprint.test.ts src/offers/rank.test.ts src/offers/template.test.ts src/offers/deeplink.test.ts src/offers/publish.test.ts src/whatsapp/rate-limit.test.ts src/whatsapp/inbound.test.ts src/search/mock.test.ts src/search/query-parse.test.ts src/copy/strings.test.ts"
+  },
+  "dependencies": {
+    "@whiskeysockets/baileys": "^6.7.18",
+    "croner": "^9.1.0",
+    "dotenv": "^16.6.1",
+    "playwright": "^1.55.0",
+    "qrcode": "^1.5.4",
+    "qrcode-terminal": "^0.12.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.18.6",
+    "@types/qrcode": "^1.5.5",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2"
+  }
+}
