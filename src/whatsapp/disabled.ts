@@ -1,5 +1,5 @@
 import { log } from "../lib/log.ts";
-import type { WhatsAppGateway, WhatsAppGroup, WhatsAppStatus } from "./gateway.ts";
+import type { InboundHandler, WhatsAppGateway, WhatsAppGroup, WhatsAppStatus } from "./gateway.ts";
 
 export class DisabledWhatsApp implements WhatsAppGateway {
   status(): WhatsAppStatus {
@@ -19,7 +19,11 @@ export class DisabledWhatsApp implements WhatsAppGateway {
     return [];
   }
 
-  async sendText(_groupJid: string, text: string): Promise<void> {
+  async sendText(_chatJid: string, text: string): Promise<void> {
     log.info("prévia da mensagem (WhatsApp desligado):\n" + text);
+  }
+
+  setInboundHandler(_handler: InboundHandler | undefined): void {
+    // WhatsApp off: nothing to listen to.
   }
 }

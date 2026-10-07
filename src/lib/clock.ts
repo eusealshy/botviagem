@@ -52,3 +52,17 @@ export function addDays(isoDay: string, days: number): string {
   date.setUTCDate(date.getUTCDate() + days);
   return date.toISOString().slice(0, 10);
 }
+
+export function isoDiffDays(fromIso: string, toIso: string): number {
+  const from = Date.parse(`${fromIso}T12:00:00Z`);
+  const to = Date.parse(`${toIso}T12:00:00Z`);
+  return Math.round((to - from) / 86_400_000);
+}
+
+/** Monday of the week that contains isoDay (UTC noon, same civil day in Brazil). */
+export function startOfWeekMonday(isoDay: string): string {
+  const date = new Date(`${isoDay}T12:00:00Z`);
+  const utcDay = date.getUTCDay();
+  const sinceMonday = utcDay === 0 ? 6 : utcDay - 1;
+  return addDays(isoDay, -sinceMonday);
+}

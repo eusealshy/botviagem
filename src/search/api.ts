@@ -41,6 +41,10 @@ export class ApiSearchAdapter implements FlightSearchAdapter {
     const target = new URL(this.url);
     target.searchParams.set("origin", query.originCode);
     target.searchParams.set("currency", query.currency);
+    if (query.destinationCode) target.searchParams.set("destination", query.destinationCode);
+    if (query.destinationCity) target.searchParams.set("destinationCity", query.destinationCity);
+    if (query.departFrom) target.searchParams.set("departFrom", query.departFrom);
+    if (query.departTo) target.searchParams.set("departTo", query.departTo);
 
     const headers: Record<string, string> = { Accept: "application/json" };
     if (this.apiKey) headers.Authorization = `Bearer ${this.apiKey}`;
@@ -59,24 +63,36 @@ export class ApiSearchAdapter implements FlightSearchAdapter {
       if (!row.destinationCity || !row.departDate || !row.returnDate || !row.priceBRL) {
         return [];
       }
-      return [
-        {
-          originCode: row.originCode ?? query.originCode,
-          originCity: row.originCity ?? query.originCity,
-          destinationCode: row.destinationCode ?? "XXX",
-          destinationCity: row.destinationCity,
-          departDate: row.departDate,
-          returnDate: row.returnDate,
-          priceBRL: row.priceBRL,
-          airline: row.airline ?? undefined,
-          stops: row.stops ?? 0,
-          outboundTimes: readLegTimes(row.outboundTimes, row.departTime, row.arriveTime),
-          returnTimes: readLegTimes(row.returnTimes, row.returnDepartTime, row.returnArriveTime),
-          deepLink: row.deepLink ?? undefined,
-        },
-      ];
+      const fare: RawFare = {
+        originCode: row.originCode ?? query.originCode,
+        originCity: row.originCity ?? query.originCity,
+        destinationCode: row.destinationCode ?? "XXX",
+        destinationCity: row.destinationCity,
+        departDate: row.departDate,
+        returnDate: row.returnDate,
+        priceBRL: row.priceBRL,
+        airline: row.airline ?? undefined,
+        stops: row.stops ?? 0,
+        outboundTimes: readLegTimes(row.outboundTimes, row.departTime, row.arriveTime),
+        returnTimes: readLegTimes(row.returnTimes, row.returnDepartTime, row.returnArriveTime),
+        deepLink: row.deepLink ?? undefined,
+      };
+      return matchesQuery(fare, query) ? [fare] : [];
     });
   }
+}
+
+function matchesQuery(fare: RawFare, query: SearchQuery): boolean {
+  if (query.departFrom && fare.departDate < query.departFrom) return false;
+  if (query.departTo && fare.departDate > query.departTo) return false;
+  if (!query.destinationCode && !query.destinationCity) return true;
+  const codeOk = Boolean(
+    query.destinationCode && fare.destinationCode.toUpperCase() === query.destinationCode.toUpperCase(),
+  );
+  const cityOk = Boolean(
+    query.destinationCity && fare.destinationCity.toLowerCase() === query.destinationCity.toLowerCase(),
+  );
+  return codeOk || cityOk;
 }
 
 function readLegTimes(

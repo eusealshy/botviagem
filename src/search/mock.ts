@@ -36,6 +36,9 @@ export class MockSearchAdapter implements FlightSearchAdapter {
   constructor(private readonly timezone: string) {}
 
   async search(query: SearchQuery): Promise<RawFare[]> {
+    if (query.destinationCity || query.destinationCode) {
+      return [targetedFare(query, this.timezone)];
+    }
     const today = dayKey(new Date(), this.timezone);
     const seed = seedFrom(`${today}|${query.originCode}`);
     const picks = pickRows(query.originCode, seed, 5);
@@ -61,6 +64,29 @@ export class MockSearchAdapter implements FlightSearchAdapter {
       };
     });
   }
+}
+
+function targetedFare(query: SearchQuery, timezone: string): RawFare {
+  const today = dayKey(new Date(), timezone);
+  const destCode = query.destinationCode ?? "XXX";
+  const destCity = query.destinationCity ?? destCode;
+  const depart = query.departFrom ?? addDays(today, 21);
+  const seed = seedFrom(`${query.originCode}|${destCode}|${depart}`);
+  const price = Math.max(219, 219 + (seed % 28) * 10);
+  return {
+    originCode: query.originCode,
+    originCity: query.originCity,
+    destinationCode: destCode,
+    destinationCity: destCity,
+    departDate: depart,
+    returnDate: addDays(depart, 5),
+    priceBRL: price,
+    airline: AIRLINES[seed % AIRLINES.length] ?? "LATAM",
+    stops: 0,
+    outboundTimes: undefined,
+    returnTimes: undefined,
+    deepLink: `https://www.google.com/travel/flights?hl=pt-BR&curr=BRL&q=flights%20${query.originCode}%20to%20${destCode}`,
+  };
 }
 
 function seedFrom(value: string): number {

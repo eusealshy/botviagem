@@ -59,6 +59,16 @@ export const copy = {
     notFound: "Essa oferta não está mais na fila.",
     searchFailed: "A busca falhou. Olha o log no terminal.",
   },
+  inbound: {
+    askOrigin: "De qual cidade você sai?",
+    askDest: "Pra qual cidade?",
+    askWhen: "Qual o dia (DD/MM) ou a semana?",
+    askAll: "Me fala origem, destino e o dia ou a semana.",
+    tooWide: "Consigo buscar um dia ou uma semana. Qual você quer?",
+    samePlace: "Origem e destino iguais. Qual o trecho?",
+    none: "Não achei passagem nesse trecho nessa data.",
+    fail: "A busca falhou. Tenta de novo daqui a pouco.",
+  },
   cta: "💬 Quer fechar? Me chama no PV.",
   disclaimer:
     "Valor sujeito a alteração até a emissão. Bagagem e assento conforme tarifa.",

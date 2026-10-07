@@ -1,3 +1,13 @@
+export type IncomingChat = {
+  id: string;
+  jid: string;
+  isGroup: boolean;
+  text: string;
+  fromMe: boolean;
+};
+
+export type InboundHandler = (msg: IncomingChat) => Promise<void>;
+
 export type WhatsAppGroup = {
   jid: string;
   name: string;
@@ -14,5 +24,6 @@ export interface WhatsAppGateway {
   status(): WhatsAppStatus;
   start(): Promise<void>;
   listGroups(): Promise<WhatsAppGroup[]>;
-  sendText(groupJid: string, text: string): Promise<void>;
+  sendText(chatJid: string, text: string): Promise<void>;
+  setInboundHandler(handler: InboundHandler | undefined): void;
 }

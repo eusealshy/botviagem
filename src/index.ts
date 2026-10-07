@@ -12,6 +12,7 @@ import { createSearchAdapter } from "./search/create.ts";
 import { startScheduler } from "./scheduler/jobs.ts";
 import { startWebServer } from "./web/server.ts";
 import { createWhatsApp } from "./whatsapp/create.ts";
+import { InboundSearch } from "./whatsapp/inbound.ts";
 
 async function main(): Promise<void> {
   const config = loadConfig();
@@ -23,6 +24,13 @@ async function main(): Promise<void> {
   const pipeline = new OfferPipeline(config, store, search);
   const whatsapp = await createWhatsApp(config);
   const publisher = new Publisher(config, store, settings, whatsapp);
+  const inbound = new InboundSearch(search, config.timezone);
+  whatsapp.setInboundHandler(async (msg) => {
+    const result = await inbound.handle(msg);
+    if (result.action === "reply") {
+      await whatsapp.sendText(result.jid, result.text);
+    }
+  });
 
   console.log(copy.boot.title);
   if (config.searchAdapter === "mock") console.log(copy.boot.mockNote);

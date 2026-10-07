@@ -34,7 +34,26 @@ Valor sujeito a alteração até a emissão. Bagagem e assento conforme tarifa.
 
 Horários só entram se a oferta trouxer ida e/ou volta. Sem horário, essas linhas somem — o bot não inventa.
 
-O bot não publica sozinho. Só depois de aprovar, e só se o teto do dia ainda não encheu.
+O bot não publica sozinho no grupo de ofertas. Só depois de aprovar, e só se o teto do dia ainda não encheu.
+
+## Chat: “bot, voo mais barato…”
+
+No WhatsApp, o bot responde **no mesmo chat** (PV ou grupo) quando alguém pede o voo mais barato. Não abre conversa nova. O teto diário de posts do grupo de ofertas **não** vale neste caminho.
+
+- **Grupo:** a mensagem tem que **começar com `bot`**. Sem isso, ignora (foi o caso no grupo testebot).
+- **PV:** vale `bot, …` ou um pedido claro de passagem/preço.
+- **Data:** só um **dia** (`dia 11/11`, `dia 11`) ou uma **semana** (`essa semana`, `semana que vem`, `de 10/11 a 16/11`). Intervalo maior que 7 dias ele pede para estreitar.
+- Faltou origem, destino ou dia/semana: uma pergunta curta.
+- Achei: responde no padrão da Carla (`🌴 DESTINO | R$ …`). Não achei: fala isso e para.
+
+Exemplos:
+
+```
+bot, qual voo mais barato saindo de natal pra sao paulo no dia 11/11
+bot, mais barato de recife pra salvador semana que vem
+```
+
+A busca usa o `SEARCH_ADAPTER` do `.env` (mock nos testes; playwright/api quando configurado).
 
 ## Requisitos
 
@@ -140,9 +159,9 @@ Ofertas já vistas (mesmo trecho e faixa de preço) ficam 14 dias em `data/offer
 
 ```
 src/config      .env, origens, grupo salvo
-src/search      adapter de busca (mock, Playwright, API)
+src/search      adapter de busca (mock, Playwright, API) e parser do chat
 src/offers      fila, ranking, texto da mensagem
-src/whatsapp    Baileys, QR em disco, teto diário
+src/whatsapp    Baileys, inbound do chat, QR em disco, teto diário
 src/web         tela local de aprovação
 src/scheduler   cron 03:00 / 09:00 / 14:00 / 19:00
 src/copy        textos em pt-BR

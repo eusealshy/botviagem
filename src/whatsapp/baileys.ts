@@ -5,7 +5,13 @@ import qrcodeTerminal from "qrcode-terminal";
 import { copy } from "../copy/strings.ts";
 import { delay } from "../lib/delay.ts";
 import { log } from "../lib/log.ts";
-import type { WhatsAppGateway, WhatsAppGroup, WhatsAppStatus } from "./gateway.ts";
+import type {
+  InboundHandler,
+  IncomingChat,
+  WhatsAppGateway,
+  WhatsAppGroup,
+  WhatsAppStatus,
+} from "./gateway.ts";
 
 type BaileysSocket = {
   ev: {
@@ -20,12 +26,24 @@ type DisconnectStatus = { error?: { output?: { statusCode?: number } } };
 
 const LOGGED_OUT = 401;
 
+type BaileysIncoming = {
+  key?: { id?: string; remoteJid?: string; fromMe?: boolean };
+  message?: BaileysContent;
+};
+
+type BaileysContent = {
+  conversation?: string;
+  extendedTextMessage?: { text?: string };
+  ephemeralMessage?: { message?: BaileysContent };
+};
+
 export class BaileysWhatsApp implements WhatsAppGateway {
   private sock: BaileysSocket | undefined;
   private connected = false;
   private qrPath: string | undefined;
   private userName: string | undefined;
   private starting = false;
+  private inbound: InboundHandler | undefined;
 
   constructor(
     private readonly dataDir: string,
@@ -57,11 +75,15 @@ export class BaileysWhatsApp implements WhatsAppGateway {
     }));
   }
 
-  async sendText(groupJid: string, text: string): Promise<void> {
+  async sendText(chatJid: string, text: string): Promise<void> {
     if (!this.sock || !this.connected) {
       throw new Error(copy.errors.notConnected);
     }
-    await this.sock.sendMessage(groupJid, { text });
+    await this.sock.sendMessage(chatJid, { text });
+  }
+
+  setInboundHandler(handler: InboundHandler | undefined): void {
+    this.inbound = handler;
   }
 
   private async connect(): Promise<void> {
@@ -85,6 +107,10 @@ export class BaileysWhatsApp implements WhatsAppGateway {
 
     sock.ev.on("creds.update", (async () => {
       await saveCreds();
+    }) as never);
+
+    sock.ev.on("messages.upsert", ((upsert: { messages?: BaileysIncoming[] }) => {
+      void this.dispatchInbound(upsert.messages ?? []);
     }) as never);
 
     sock.ev.on("connection.update", (async (update: {
@@ -120,6 +146,20 @@ export class BaileysWhatsApp implements WhatsAppGateway {
     }) as never);
   }
 
+  private async dispatchInbound(messages: BaileysIncoming[]): Promise<void> {
+    const handler = this.inbound;
+    if (!handler) return;
+    for (const raw of messages) {
+      const incoming = toIncomingChat(raw);
+      if (!incoming) continue;
+      try {
+        await handler(incoming);
+      } catch (err) {
+        log.warn("inbound WhatsApp falhou", err);
+      }
+    }
+  }
+
   private async persistQr(qr: string): Promise<void> {
     const path = join(this.dataDir, "whatsapp-qr.png");
     await mkdir(this.dataDir, { recursive: true });
@@ -135,6 +175,28 @@ export class BaileysWhatsApp implements WhatsAppGateway {
     await unlink(this.qrPath).catch(() => undefined);
     this.qrPath = undefined;
   }
+}
+
+function toIncomingChat(raw: BaileysIncoming): IncomingChat | undefined {
+  const jid = raw.key?.remoteJid;
+  if (!jid || jid === "status@broadcast") return undefined;
+  const text = extractText(raw.message);
+  if (!text) return undefined;
+  return {
+    id: raw.key?.id ?? `${jid}:${text.slice(0, 24)}`,
+    jid,
+    isGroup: jid.endsWith("@g.us"),
+    text,
+    fromMe: Boolean(raw.key?.fromMe),
+  };
+}
+
+function extractText(message: BaileysContent | undefined): string | undefined {
+  if (!message) return undefined;
+  if (message.conversation?.trim()) return message.conversation;
+  if (message.extendedTextMessage?.text?.trim()) return message.extendedTextMessage.text;
+  if (message.ephemeralMessage?.message) return extractText(message.ephemeralMessage.message);
+  return undefined;
 }
 
 function silentLogger(): {

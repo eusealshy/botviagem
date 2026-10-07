@@ -1,5 +1,6 @@
 import { copy } from "../copy/strings.ts";
 import { formatOfferDateRange } from "../lib/clock.ts";
+import { foldPt } from "../lib/fold.ts";
 import type { FlightOffer, LegTimes } from "./types.ts";
 
 const DEFAULT_DESTINATION_EMOJI = "✈️";
@@ -61,7 +62,7 @@ export function formatBRL(value: number): string {
 }
 
 export function destinationEmoji(city: string): string {
-  return DESTINATION_EMOJI[foldCity(city)] ?? DEFAULT_DESTINATION_EMOJI;
+  return DESTINATION_EMOJI[foldPt(city)] ?? DEFAULT_DESTINATION_EMOJI;
 }
 
 function formatStops(stops: number): string {
@@ -77,11 +78,3 @@ function formatTimeLine(times: LegTimes | undefined): string | undefined {
   return `🕐 ${depart} → ${arrive}`;
 }
 
-function foldCity(city: string): string {
-  return city
-    .normalize("NFD")
-    .replace(/\p{M}/gu, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, " ")
-    .trim();
-}

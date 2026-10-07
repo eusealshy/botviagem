@@ -29,11 +29,14 @@ export class PlaywrightSearchAdapter implements FlightSearchAdapter {
         extraHTTPHeaders: { "Accept-Language": "pt-BR,pt;q=0.9" },
       });
       const today = dayKey(new Date(), this.timezone);
-      const depart = addDays(today, 28);
-      const back = addDays(today, 35);
+      const depart = query.departFrom ?? addDays(today, 28);
+      const back = query.departFrom
+        ? addDays(query.departTo ?? query.departFrom, 5)
+        : addDays(today, 35);
+      const destLabel = query.destinationCode ?? query.destinationCity ?? "qualquer lugar";
       const url =
         `https://www.google.com/travel/flights?hl=pt-BR&gl=BR&curr=BRL` +
-        `&q=${encodeURIComponent(`Voos de ${query.originCode} para qualquer lugar ${depart} ${back}`)}`;
+        `&q=${encodeURIComponent(`Voos de ${query.originCode} para ${destLabel} ${depart} ${back}`)}`;
 
       await page.goto(url, { waitUntil: "domcontentloaded", timeout: 45_000 });
       await delay(4_000);
@@ -42,11 +45,15 @@ export class PlaywrightSearchAdapter implements FlightSearchAdapter {
       const extracted = await page.evaluate(readFareCards);
 
       log.info(`playwright ${query.originCode}: ${extracted.length} preços lidos`);
-      return extracted.map((row) => ({
+      const wanted = query.destinationCity?.toLowerCase();
+      const rows = wanted
+        ? extracted.filter((row) => row.city.toLowerCase().includes(wanted) || wanted.includes(row.city.toLowerCase()))
+        : extracted;
+      return rows.map((row) => ({
         originCode: query.originCode,
         originCity: query.originCity,
-        destinationCode: slugCode(row.city),
-        destinationCity: row.city,
+        destinationCode: query.destinationCode ?? slugCode(row.city),
+        destinationCity: query.destinationCity ?? row.city,
         departDate: depart,
         returnDate: back,
         priceBRL: row.priceBRL,
