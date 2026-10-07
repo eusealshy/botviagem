@@ -59,15 +59,7 @@ export const copy = {
     notFound: "Essa oferta não está mais na fila.",
     searchFailed: "A busca falhou. Olha o log no terminal.",
   },
+  cta: "💬 Quer fechar? Me chama no PV.",
   disclaimer:
-    "preço pode mudar até a emissão. assento e bagagem não entram nesse valor. confirma com a gente antes de comprar por fora.",
+    "Valor sujeito a alteração até a emissão. Bagagem e assento conforme tarifa.",
 } as const;
-
-export function ctaDestination(city: string): string {
-  return city
-    .normalize("NFD")
-    .replace(/\p{M}/gu, "")
-    .replace(/[^A-Za-z0-9]+/g, " ")
-    .trim()
-    .toUpperCase();
-}

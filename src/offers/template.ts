@@ -1,61 +1,87 @@
-import { copy, ctaDestination } from "../copy/strings.ts";
-import { formatPtDate } from "../lib/clock.ts";
-import type { FlightOffer } from "./types.ts";
+import { copy } from "../copy/strings.ts";
+import { formatOfferDateRange } from "../lib/clock.ts";
+import type { FlightOffer, LegTimes } from "./types.ts";
 
-const EMOJIS = ["✈️", "🌴", "🧳"] as const;
+const DEFAULT_DESTINATION_EMOJI = "✈️";
 
-export function formatOfferMessage(offer: FlightOffer, brandName: string): string {
-  const dest = ctaDestination(offer.destination.city);
-  const price = formatBRL(offer.priceBRL);
-  const dates = `${formatPtDate(offer.departDate)} a ${formatPtDate(offer.returnDate)}`;
-  const route = `${offer.origin.code} ⇄ ${offer.destination.city}`;
-  const stopLine = offer.stops === 0 ? "voo direto" : `${offer.stops} parada(s)`;
-  const airline = offer.airline ? ` · ${offer.airline}` : "";
-  const emoji = EMOJIS[hashMod(offer.id, EMOJIS.length)] ?? "✈️";
-  const variant = hashMod(offer.id, 3);
+/** Small map for common Brazilian (and nearby) destinations. Unknown cities use ✈️. */
+const DESTINATION_EMOJI: Record<string, string> = {
+  curitiba: "🌴",
+  recife: "🌴",
+  salvador: "🌴",
+  fortaleza: "🌴",
+  natal: "🌴",
+  maceio: "🌴",
+  "joao pessoa": "🌴",
+  "porto seguro": "🌴",
+  "fernando de noronha": "🌴",
+  "porto de galinhas": "🌴",
+  "florianopolis": "🏖️",
+  "rio de janeiro": "🏖️",
+  buzios: "🏖️",
+  "cabo frio": "🏖️",
+  "foz do iguacu": "💧",
+  gramado: "🌲",
+  canela: "🌲",
+  manaus: "🌳",
+  belem: "🌳",
+  "porto alegre": "🧉",
+  brasilia: "🏛️",
+  "sao paulo": "🏙️",
+  "belo horizonte": "⛰️",
+  "buenos aires": "💃",
+  lisboa: "🏰",
+  miami: "🌴",
+  santiago: "⛰️",
+};
 
-  const body =
-    variant === 0
-      ? [
-          `${emoji} ${offer.destination.city} saindo de ${offer.origin.city}`,
-          route,
-          `ida e volta · ${dates}`,
-          price,
-          `${stopLine}${airline}`,
-        ]
-      : variant === 1
-        ? [
-            `${emoji} ${price} · ${offer.destination.city}`,
-            `${route}, ida e volta ${dates}`,
-            `${stopLine}${airline}`,
-          ]
-        : [
-            `${emoji} achado: ${route}`,
-            `ida e volta ${dates}`,
-            price,
-            `${stopLine}${airline}`,
-          ];
-
-  return [
-    ...body,
+export function formatOfferMessage(offer: FlightOffer): string {
+  const lines = [
+    `${destinationEmoji(offer.destination.city)} ${offer.destination.city.toUpperCase()} | ${formatBRL(offer.priceBRL)}`,
     "",
-    `QUERO ${dest}`,
-    "",
-    copy.disclaimer,
-    brandName,
-  ].join("\n");
+    `📅 ${formatOfferDateRange(offer.departDate, offer.returnDate)}`,
+    `✈️ ${offer.origin.code} ⇄ ${offer.destination.city}`,
+    formatStops(offer.stops),
+  ];
+
+  const outbound = formatTimeLine(offer.outboundTimes);
+  const inbound = formatTimeLine(offer.returnTimes);
+  if (outbound) lines.push(outbound);
+  if (inbound) lines.push(inbound);
+
+  lines.push("", copy.cta, "", copy.disclaimer);
+  return lines.join("\n");
 }
 
 export function formatBRL(value: number): string {
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
+  const formatted = new Intl.NumberFormat("pt-BR", {
     maximumFractionDigits: 0,
-  }).format(value);
+  }).format(Math.round(value));
+  return `R$ ${formatted}`;
 }
 
-function hashMod(value: string, mod: number): number {
-  let acc = 0;
-  for (const char of value) acc = (acc + char.charCodeAt(0)) % 997;
-  return acc % mod;
+export function destinationEmoji(city: string): string {
+  return DESTINATION_EMOJI[foldCity(city)] ?? DEFAULT_DESTINATION_EMOJI;
+}
+
+function formatStops(stops: number): string {
+  if (stops === 0) return "⚡ Direto";
+  if (stops === 1) return "⚡ 1 parada";
+  return `⚡ ${stops} paradas`;
+}
+
+function formatTimeLine(times: LegTimes | undefined): string | undefined {
+  const depart = times?.depart.trim();
+  const arrive = times?.arrive.trim();
+  if (!depart || !arrive) return undefined;
+  return `🕐 ${depart} → ${arrive}`;
+}
+
+function foldCity(city: string): string {
+  return city
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
 }

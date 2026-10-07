@@ -29,7 +29,7 @@ async function main(): Promise<void> {
   console.log(copy.boot.nextChecks(config.checkHours.map((h) => `${String(h).padStart(2, "0")}:00`).join(", ")));
 
   const queued = await pipeline.run();
-  printOffers(queued, config.brandName);
+  printOffers(queued);
 
   if (config.runOnce) {
     return;

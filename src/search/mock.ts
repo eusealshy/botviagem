@@ -55,6 +55,8 @@ export class MockSearchAdapter implements FlightSearchAdapter {
         priceBRL: price,
         airline: AIRLINES[(seed + index) % AIRLINES.length] ?? "LATAM",
         stops: index === 2 ? 1 : 0,
+        outboundTimes: undefined,
+        returnTimes: undefined,
         deepLink: `https://www.google.com/travel/flights?hl=pt-BR&curr=BRL&q=flights%20${query.originCode}%20to%20${row.code}`,
       };
     });

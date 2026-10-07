@@ -52,6 +52,8 @@ export class PlaywrightSearchAdapter implements FlightSearchAdapter {
         priceBRL: row.priceBRL,
         airline: undefined,
         stops: 0,
+        outboundTimes: undefined,
+        returnTimes: undefined,
         deepLink: url,
       }));
     } finally {

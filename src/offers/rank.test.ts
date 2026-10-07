@@ -14,6 +14,8 @@ function fare(city: string, priceBRL: number, extra: Partial<RawFare> = {}): Raw
     priceBRL,
     airline: undefined,
     stops: 0,
+    outboundTimes: undefined,
+    returnTimes: undefined,
     deepLink: undefined,
     ...extra,
   };

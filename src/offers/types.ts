@@ -11,6 +11,11 @@ export type AirportRef = {
   city: string;
 };
 
+export type LegTimes = {
+  depart: string;
+  arrive: string;
+};
+
 export type FlightOffer = {
   id: string;
   fingerprint: string;
@@ -21,6 +26,8 @@ export type FlightOffer = {
   priceBRL: number;
   airline: string | undefined;
   stops: number;
+  outboundTimes: LegTimes | undefined;
+  returnTimes: LegTimes | undefined;
   source: OfferSource;
   foundAt: string;
   deepLink: string | undefined;
@@ -45,5 +52,7 @@ export type RawFare = {
   priceBRL: number;
   airline: string | undefined;
   stops: number;
+  outboundTimes: LegTimes | undefined;
+  returnTimes: LegTimes | undefined;
   deepLink: string | undefined;
 };

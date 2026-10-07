@@ -16,20 +16,23 @@ Conta que dispara mensagem automática demais leva restrição ou ban. Use um n�
 2. Procura tarifa fora do normal a partir das origens acima.
 3. Coloca o achado numa fila. Você aprova no navegador local ou no terminal.
 4. Depois da aprovação, manda no grupo configurado.
-5. A mensagem segue o formato dos grupos de viagem no Brasil: emoji, preço, datas, ida e volta, `QUERO [DESTINO]`, aviso de preço e nome da agência.
+5. A mensagem segue o padrão da Carla: destino em caixa alta, preço, datas, trecho, direto/paradas, horários quando a oferta tiver, CTA no PV e aviso de tarifa.
 
 ```
-✈️ Recife saindo de São Paulo
-GRU ⇄ Recife
-ida e volta · 12/11 a 18/11
-R$ 389
-voo direto · Azul
+🌴 CURITIBA | R$ 219
 
-QUERO RECIFE
+📅 11 → 16/11
+✈️ CGH ⇄ Curitiba
+⚡ Direto
+🕐 08:20 → 09:25
+🕐 18:40 → 19:45
 
-preço pode mudar até a emissão. assento e bagagem não entram nesse valor. confirma com a gente antes de comprar por fora.
-[Sua Agência]
+💬 Quer fechar? Me chama no PV.
+
+Valor sujeito a alteração até a emissão. Bagagem e assento conforme tarifa.
 ```
+
+Horários só entram se a oferta trouxer ida e/ou volta. Sem horário, essas linhas somem — o bot não inventa.
 
 O bot não publica sozinho. Só depois de aprovar, e só se o teto do dia ainda não encheu.
 
@@ -84,7 +87,7 @@ Veja `.env.example`. Os campos que mais mudam no dia a dia:
 | `SEARCH_ADAPTER` | `mock`, `playwright` ou `api` |
 | `WHATSAPP_ENABLED` | liga o Baileys |
 | `WHATSAPP_GROUP_JID` | grupo de destino, se você já souber o JID |
-| `BRAND_NAME` | rodapé da mensagem |
+| `BRAND_NAME` | nome local da agência (não entra mais no texto do grupo) |
 | `MAX_POSTS_PER_DAY` | teto de envios no dia (padrão 6) |
 | `ORIGINS` | aeroportos de saída |
 | `CHECK_HOURS` | horas das buscas em Brasília |
@@ -121,6 +124,8 @@ Cada horário da madrugada/manhã/tarde/noite busca um par de origens, para não
       "priceBRL": 389,
       "airline": "Azul",
       "stops": 0,
+      "outboundTimes": { "depart": "08:20", "arrive": "09:25" },
+      "returnTimes": { "depart": "18:40", "arrive": "19:45" },
       "deepLink": "https://www.google.com/travel/flights"
     }
   ]

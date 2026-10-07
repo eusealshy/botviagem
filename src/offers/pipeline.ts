@@ -53,6 +53,8 @@ export class OfferPipeline {
         priceBRL: fare.priceBRL,
         airline: fare.airline,
         stops: fare.stops,
+        outboundTimes: fare.outboundTimes,
+        returnTimes: fare.returnTimes,
         source: this.search.source,
         foundAt,
         deepLink: fare.deepLink,

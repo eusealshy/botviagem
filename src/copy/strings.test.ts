@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { copy, ctaDestination } from "./strings.ts";
+import { copy } from "./strings.ts";
 
 function walk(value: unknown): string[] {
   if (typeof value === "string") return [value];
@@ -11,9 +11,12 @@ function walk(value: unknown): string[] {
   return [];
 }
 
-test("cta do grupo fica em caixa alta sem acento", () => {
-  assert.equal(ctaDestination("Foz do Iguaçu"), "FOZ DO IGUACU");
-  assert.equal(ctaDestination("São Paulo"), "SAO PAULO");
+test("CTA e disclaimer da oferta seguem o texto da Carla", () => {
+  assert.equal(copy.cta, "💬 Quer fechar? Me chama no PV.");
+  assert.equal(
+    copy.disclaimer,
+    "Valor sujeito a alteração até a emissão. Bagagem e assento conforme tarifa.",
+  );
 });
 
 test("copy não carrega os hábitos de texto de modelo listados no humanizer", () => {

@@ -22,7 +22,7 @@ export class Publisher {
   ) {}
 
   preview(offer: StoredOffer): string {
-    return formatOfferMessage(offer, this.config.brandName);
+    return formatOfferMessage(offer);
   }
 
   postedToday(): number {

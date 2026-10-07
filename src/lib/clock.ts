@@ -30,6 +30,23 @@ export function formatPtDate(isoDay: string): string {
   return `${day}/${month}`;
 }
 
+/** Same month: 11 → 16/11. Different months: 28/11 → 03/12. */
+export function formatOfferDateRange(departIso: string, returnIso: string): string {
+  const depart = splitIsoDay(departIso);
+  const back = splitIsoDay(returnIso);
+  if (!depart || !back) return `${departIso} → ${returnIso}`;
+  if (depart.year === back.year && depart.month === back.month) {
+    return `${depart.day} → ${back.day}/${back.month}`;
+  }
+  return `${depart.day}/${depart.month} → ${back.day}/${back.month}`;
+}
+
+function splitIsoDay(isoDay: string): { year: string; month: string; day: string } | undefined {
+  const [year, month, day] = isoDay.split("-");
+  if (!year || !month || !day) return undefined;
+  return { year, month, day };
+}
+
 export function addDays(isoDay: string, days: number): string {
   const date = new Date(`${isoDay}T12:00:00Z`);
   date.setUTCDate(date.getUTCDate() + days);

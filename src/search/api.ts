@@ -1,19 +1,32 @@
-import type { RawFare } from "../offers/types.ts";
+import type { LegTimes, RawFare } from "../offers/types.ts";
 import type { FlightSearchAdapter, SearchQuery } from "./adapter.ts";
 
+type ApiLegTimes = {
+  depart?: string;
+  arrive?: string;
+};
+
+type ApiOfferRow = {
+  originCode?: string;
+  originCity?: string;
+  destinationCode?: string;
+  destinationCity?: string;
+  departDate?: string;
+  returnDate?: string;
+  priceBRL?: number;
+  airline?: string;
+  stops?: number;
+  deepLink?: string;
+  outboundTimes?: ApiLegTimes;
+  returnTimes?: ApiLegTimes;
+  departTime?: string;
+  arriveTime?: string;
+  returnDepartTime?: string;
+  returnArriveTime?: string;
+};
+
 type ApiPayload = {
-  offers?: Array<{
-    originCode?: string;
-    originCity?: string;
-    destinationCode?: string;
-    destinationCity?: string;
-    departDate?: string;
-    returnDate?: string;
-    priceBRL?: number;
-    airline?: string;
-    stops?: number;
-    deepLink?: string;
-  }>;
+  offers?: ApiOfferRow[];
 };
 
 export class ApiSearchAdapter implements FlightSearchAdapter {
@@ -57,9 +70,22 @@ export class ApiSearchAdapter implements FlightSearchAdapter {
           priceBRL: row.priceBRL,
           airline: row.airline ?? undefined,
           stops: row.stops ?? 0,
+          outboundTimes: readLegTimes(row.outboundTimes, row.departTime, row.arriveTime),
+          returnTimes: readLegTimes(row.returnTimes, row.returnDepartTime, row.returnArriveTime),
           deepLink: row.deepLink ?? undefined,
         },
       ];
     });
   }
+}
+
+function readLegTimes(
+  nested: ApiLegTimes | undefined,
+  departFlat: string | undefined,
+  arriveFlat: string | undefined,
+): LegTimes | undefined {
+  const depart = nested?.depart?.trim() || departFlat?.trim();
+  const arrive = nested?.arrive?.trim() || arriveFlat?.trim();
+  if (!depart || !arrive) return undefined;
+  return { depart, arrive };
 }
