@@ -16,7 +16,8 @@ Conta que dispara mensagem automática demais leva restrição ou ban. Use um n�
 2. Procura tarifa fora do normal a partir das origens acima.
 3. Coloca o achado numa fila. Você aprova no navegador local ou no terminal.
 4. Depois da aprovação, manda no grupo configurado.
-5. A mensagem segue o padrão da Carla: destino em caixa alta, preço, datas, trecho, direto/paradas, horários quando a oferta tiver, CTA no PV e aviso de tarifa.
+5. No mesmo momento, se `WHATSAPP_ADMIN_JID` estiver preenchido, manda no PV da admin um resumo curto + link do Google Flights daquela oferta.
+6. A mensagem do grupo segue o padrão da Carla: destino em caixa alta, preço, datas, trecho, direto/paradas, horários quando a oferta tiver, CTA no PV e aviso de tarifa. Sem o link.
 
 ```
 🌴 CURITIBA | R$ 219
@@ -36,24 +37,26 @@ Horários só entram se a oferta trouxer ida e/ou volta. Sem horário, essas lin
 
 O bot não publica sozinho no grupo de ofertas. Só depois de aprovar, e só se o teto do dia ainda não encheu.
 
-## Chat: “bot, voo mais barato…”
+## PV da admin (link Google Flights)
 
-No WhatsApp, o bot responde **no mesmo chat** (PV ou grupo) quando alguém pede o voo mais barato. Não abre conversa nova. O teto diário de posts do grupo de ofertas **não** vale neste caminho.
+Prioridade: post no grupo + DM para a admin.
 
-- **Grupo:** a mensagem tem que **começar com `bot`**. Sem isso, ignora (foi o caso no grupo testebot).
-- **PV:** vale `bot, …` ou um pedido claro de passagem/preço.
-- **Data:** só um **dia** (`dia 11/11`, `dia 11`) ou uma **semana** (`essa semana`, `semana que vem`, `de 10/11 a 16/11`). Intervalo maior que 7 dias ele pede para estreitar.
-- Faltou origem, destino ou dia/semana: uma pergunta curta.
-- Achei: responde no padrão da Carla (`🌴 DESTINO | R$ …`). Não achei: fala isso e para.
-
-Exemplos:
+No `.env`, `WHATSAPP_ADMIN_JID` (JID de WhatsApp, tipo `5511…@s.whatsapp.net`). Quando uma oferta é aprovada e vai para o grupo, o bot também manda neste PV:
 
 ```
-bot, qual voo mais barato saindo de natal pra sao paulo no dia 11/11
-bot, mais barato de recife pra salvador semana que vem
+Postei no grupo.
+Curitiba · R$ 219 · CGH ⇄ Curitiba · 11 → 16/11
+
+https://www.google.com/travel/flights?hl=pt-BR&gl=BR&curr=BRL&q=...
 ```
 
-A busca usa o `SEARCH_ADAPTER` do `.env` (mock nos testes; playwright/api quando configurado).
+O link é montado com origem, destino e datas da oferta (se a busca não trouxe um `deepLink` específico). Sem `WHATSAPP_ADMIN_JID`, só o grupo recebe.
+
+## Chat “bot, voo mais barato…” (opcional / standby)
+
+Caminho extra, não o fluxo principal. O bot pode responder no mesmo chat (PV ou grupo) a um pedido de voo mais barato. Grupo só se a mensagem **começar com `bot`**. Datas: um dia ou uma semana. Falta dado: uma pergunta curta.
+
+Deixe de lado se o grupo + PV da admin já resolvem o dia a dia.
 
 ## Requisitos
 
@@ -88,6 +91,7 @@ npm run mock
 4. A sessão fica em `data/whatsapp-auth/`. Nas próximas vezes não pede QR de novo, até a Meta derrubar a sessão.
 5. Na tela local, escolha o grupo (ou preencha `WHATSAPP_GROUP_JID`, no formato `120363...@g.us`).
 6. Aprove uma oferta. O bot manda o texto no grupo, se o teto do dia ainda não encheu.
+7. Se `WHATSAPP_ADMIN_JID` estiver no `.env`, a admin recebe no PV o resumo + link do Google Flights.
 
 Aprovação pelo terminal, na mesma máquina:
 
@@ -106,6 +110,7 @@ Veja `.env.example`. Os campos que mais mudam no dia a dia:
 | `SEARCH_ADAPTER` | `mock`, `playwright` ou `api` |
 | `WHATSAPP_ENABLED` | liga o Baileys |
 | `WHATSAPP_GROUP_JID` | grupo de destino, se você já souber o JID |
+| `WHATSAPP_ADMIN_JID` | PV da admin; recebe resumo + Google Flights após o post no grupo |
 | `BRAND_NAME` | nome local da agência (não entra mais no texto do grupo) |
 | `MAX_POSTS_PER_DAY` | teto de envios no dia (padrão 6) |
 | `ORIGINS` | aeroportos de saída |
@@ -160,7 +165,7 @@ Ofertas já vistas (mesmo trecho e faixa de preço) ficam 14 dias em `data/offer
 ```
 src/config      .env, origens, grupo salvo
 src/search      adapter de busca (mock, Playwright, API) e parser do chat
-src/offers      fila, ranking, texto da mensagem
+src/offers      fila, ranking, texto da mensagem, link Google Flights
 src/whatsapp    Baileys, inbound do chat, QR em disco, teto diário
 src/web         tela local de aprovação
 src/scheduler   cron 03:00 / 09:00 / 14:00 / 19:00

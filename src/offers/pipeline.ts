@@ -2,6 +2,7 @@ import { originByCode } from "../config/origins.ts";
 import type { Config } from "../config/env.ts";
 import { log } from "../lib/log.ts";
 import type { FlightSearchAdapter } from "../search/adapter.ts";
+import { resolveDeepLink } from "./deeplink.ts";
 import { fareFingerprint, offerId } from "./fingerprint.ts";
 import { isPromoWorthy, scoreFare } from "./rank.ts";
 import type { OfferStore } from "./store.ts";
@@ -57,7 +58,13 @@ export class OfferPipeline {
         returnTimes: fare.returnTimes,
         source: this.search.source,
         foundAt,
-        deepLink: fare.deepLink,
+        deepLink: resolveDeepLink({
+          originCode: fare.originCode,
+          destinationCode: fare.destinationCode,
+          departDate: fare.departDate,
+          returnDate: fare.returnDate,
+          deepLink: fare.deepLink,
+        }),
         promoScore,
       };
     });

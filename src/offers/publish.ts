@@ -5,6 +5,7 @@ import { dayKey } from "../lib/clock.ts";
 import { log } from "../lib/log.ts";
 import type { WhatsAppGateway } from "../whatsapp/gateway.ts";
 import { checkDailyLimit } from "../whatsapp/rate-limit.ts";
+import { ensureDeepLink, formatAdminNotice } from "./deeplink.ts";
 import type { OfferStore } from "./store.ts";
 import { formatOfferMessage } from "./template.ts";
 import type { StoredOffer } from "./types.ts";
@@ -48,8 +49,10 @@ export class Publisher {
       };
     }
 
-    const preview = this.preview(offer);
+    const linked = ensureDeepLink(offer);
+    const preview = this.preview(linked);
     const groupJid = this.settings.groupJid ?? this.config.whatsappGroupJid;
+    const adminJid = this.config.whatsappAdminJid;
     const wa = this.whatsapp.status();
 
     if (wa.enabled && !groupJid) {
@@ -66,6 +69,7 @@ export class Publisher {
       if (!posted) {
         return { ok: false, reason: "missing", message: copy.errors.notFound };
       }
+      await this.notifyAdmin(wa.enabled, groupJid, adminJid, linked);
       log.info(`oferta ${id} aprovada (${wa.enabled ? "enviada" : "prévia"})`);
       return { ok: true, offer: posted, preview, sent: wa.enabled };
     } catch (err) {
@@ -78,5 +82,19 @@ export class Publisher {
 
   async reject(id: string): Promise<StoredOffer | undefined> {
     return this.store.markRejected(id);
+  }
+
+  private async notifyAdmin(
+    enabled: boolean,
+    groupJid: string | undefined,
+    adminJid: string | undefined,
+    offer: StoredOffer,
+  ): Promise<void> {
+    if (!enabled || !groupJid || !adminJid || adminJid === groupJid) return;
+    try {
+      await this.whatsapp.sendText(adminJid, formatAdminNotice(offer));
+    } catch (err) {
+      log.warn("DM da admin falhou; o post no grupo já saiu", err);
+    }
   }
 }

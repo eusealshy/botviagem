@@ -1,4 +1,5 @@
 import { addDays, dayKey } from "../lib/clock.ts";
+import { googleFlightsDeepLink } from "../offers/deeplink.ts";
 import type { RawFare } from "../offers/types.ts";
 import type { FlightSearchAdapter, SearchQuery } from "./adapter.ts";
 
@@ -60,7 +61,12 @@ export class MockSearchAdapter implements FlightSearchAdapter {
         stops: index === 2 ? 1 : 0,
         outboundTimes: undefined,
         returnTimes: undefined,
-        deepLink: `https://www.google.com/travel/flights?hl=pt-BR&curr=BRL&q=flights%20${query.originCode}%20to%20${row.code}`,
+        deepLink: googleFlightsDeepLink({
+          originCode: query.originCode,
+          destinationCode: row.code,
+          departDate: addDays(today, departOffset),
+          returnDate: addDays(today, departOffset + stay),
+        }),
       };
     });
   }
@@ -85,7 +91,12 @@ function targetedFare(query: SearchQuery, timezone: string): RawFare {
     stops: 0,
     outboundTimes: undefined,
     returnTimes: undefined,
-    deepLink: `https://www.google.com/travel/flights?hl=pt-BR&curr=BRL&q=flights%20${query.originCode}%20to%20${destCode}`,
+    deepLink: googleFlightsDeepLink({
+      originCode: query.originCode,
+      destinationCode: destCode,
+      departDate: depart,
+      returnDate: addDays(depart, 5),
+    }),
   };
 }
 

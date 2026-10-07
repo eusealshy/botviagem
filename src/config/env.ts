@@ -16,6 +16,7 @@ export type Config = {
   playwrightHeadless: boolean;
   whatsappEnabled: boolean;
   whatsappGroupJid: string | undefined;
+  whatsappAdminJid: string | undefined;
   dataDir: string;
   webHost: string;
   webPort: number;
@@ -90,6 +91,7 @@ export function loadConfig(argv = process.argv.slice(2)): Config {
     playwrightHeadless: readBool("PLAYWRIGHT_HEADLESS", true),
     whatsappEnabled: readBool("WHATSAPP_ENABLED", false),
     whatsappGroupJid: read("WHATSAPP_GROUP_JID", "") || undefined,
+    whatsappAdminJid: read("WHATSAPP_ADMIN_JID", "") || undefined,
     dataDir: resolve(read("DATA_DIR", "./data")),
     webHost: read("WEB_HOST", "127.0.0.1"),
     webPort: readInt("WEB_PORT", 3847),
