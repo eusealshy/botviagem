@@ -9,7 +9,7 @@
   },
   "scripts": {
     "start": "tsx src/index.ts",
-    "mock": "tsx src/index.ts --once",
+    "mock": "tsx src/index.ts --once --mock",
     "approve": "tsx src/index.ts --cli",
     "typecheck": "tsc --noEmit",
     "test": "tsx --test src/offers/fingerprint.test.ts src/offers/rank.test.ts src/offers/template.test.ts src/offers/deeplink.test.ts src/offers/publish.test.ts src/whatsapp/rate-limit.test.ts src/whatsapp/inbound.test.ts src/search/mock.test.ts src/search/query-parse.test.ts src/copy/strings.test.ts"

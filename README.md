@@ -70,14 +70,15 @@ Deixe de lado se o grupo + PV da admin já resolvem o dia a dia.
 ```bash
 cp .env.example .env
 npm install
+npx playwright install chromium
 npm start
 ```
 
 No Windows, o equivalente do `cp` é `copy .env.example .env`.
 
-O padrão é `SEARCH_ADAPTER=mock`. Na primeira subida o bot imprime ofertas de exemplo no terminal e abre a tela de aprovação em [http://127.0.0.1:3847](http://127.0.0.1:3847).
+O padrão é `SEARCH_ADAPTER=playwright` (Google Flights de verdade). A tela de aprovação abre em [http://127.0.0.1:3847](http://127.0.0.1:3847).
 
-Só a fila, sem ficar rodando:
+`mock` é só dry-run da UI local (ofertas de exemplo, sem internet):
 
 ```bash
 npm run mock
@@ -107,7 +108,7 @@ Veja `.env.example`. Os campos que mais mudam no dia a dia:
 
 | Variável | Função |
 | --- | --- |
-| `SEARCH_ADAPTER` | `mock`, `playwright` ou `api` |
+| `SEARCH_ADAPTER` | padrão `playwright` (Google Flights). `mock` só para dry-run da UI. `api` se houver endpoint |
 | `WHATSAPP_ENABLED` | liga o Baileys |
 | `WHATSAPP_GROUP_JID` | grupo de destino, se você já souber o JID |
 | `WHATSAPP_ADMIN_JID` | PV da admin; recebe resumo + Google Flights após o post no grupo |
@@ -119,15 +120,17 @@ Veja `.env.example`. Os campos que mais mudam no dia a dia:
 
 ## Busca real
 
-O buscador fica atrás de uma interface (`src/search/adapter.ts`). Trocar de mock para Google Flights ou API não mexe em aprovação nem no WhatsApp.
+O buscador fica atrás de uma interface (`src/search/adapter.ts`). Playwright (Google Flights) é o padrão. Mock só entra no dry-run da tela. Trocar o adapter não mexe em aprovação nem no WhatsApp.
 
 ### Playwright (Google Flights)
+
+Este é o padrão (`SEARCH_ADAPTER=playwright`).
 
 ```bash
 npx playwright install chromium
 ```
 
-No `.env`: `SEARCH_ADAPTER=playwright`. O scraper lê a página de explorar destinos. Seletor do Google muda, CAPTCHA aparece, e nisso a rodada volta vazia em vez de quebrar o bot. Isso é mais estável no PC da agência do que em servidor.
+O scraper lê a página de explorar destinos. Seletor do Google muda, CAPTCHA aparece, e nisso a rodada volta vazia em vez de quebrar o bot. Isso é mais estável no PC da agência do que em servidor.
 
 Cada horário da madrugada/manhã/tarde/noite busca um par de origens, para não abrir seis Chromiums de uma vez.
 
@@ -176,8 +179,8 @@ src/cli         impressão e aprovação no terminal
 ## Comandos
 
 ```bash
-npm start       # bot completo
-npm run mock    # uma busca de exemplo e sai
+npm start       # bot completo (Google Flights via Playwright)
+npm run mock    # dry-run da UI: ofertas de exemplo, sem Google Flights, e sai
 npm run approve # fila no terminal
 npm test
 npm run typecheck

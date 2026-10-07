@@ -72,7 +72,9 @@ function parseAdapter(raw: string): SearchAdapterName {
 export function loadConfig(argv = process.argv.slice(2)): Config {
   loadDotenv();
 
-  const searchAdapter = parseAdapter(read("SEARCH_ADAPTER", "mock"));
+  const searchAdapter = argv.includes("--mock")
+    ? "mock"
+    : parseAdapter(read("SEARCH_ADAPTER", "playwright"));
   const flightApiUrl = read("FLIGHT_API_URL", "") || undefined;
 
   if (searchAdapter === "api" && !flightApiUrl) {

@@ -7,7 +7,7 @@
 export const copy = {
   boot: {
     title: "bot-viagens",
-    mockNote: "modo mock: ofertas de exemplo, sem Google Flights.",
+    mockNote: "modo mock: dry-run da tela, ofertas de exemplo, sem Google Flights.",
     approvalUrl: (url: string) => `tela de aprovação: ${url}`,
     nextChecks: (hours: string) => `próximas buscas: ${hours} (Brasília)`,
     qrFile: (path: string) => `QR do WhatsApp salvo em ${path}`,
