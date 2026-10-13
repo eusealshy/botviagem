@@ -5,6 +5,7 @@ import qrcodeTerminal from "qrcode-terminal";
 import { copy } from "../copy/strings.ts";
 import { delay } from "../lib/delay.ts";
 import { log } from "../lib/log.ts";
+import { formatBaileysLog } from "./format-log.ts";
 import type {
   InboundHandler,
   IncomingChat,
@@ -216,13 +217,16 @@ function silentLogger(): {
     debug: () => undefined,
     info: () => undefined,
     warn: (...args: unknown[]) => {
-      if (args[0]) log.warn(String(args[0]));
+      const message = formatBaileysLog(args);
+      if (message) log.warn(message);
     },
     error: (...args: unknown[]) => {
-      if (args[0]) log.error(String(args[0]));
+      const message = formatBaileysLog(args);
+      if (message) log.error(message);
     },
     fatal: (...args: unknown[]) => {
-      if (args[0]) log.error(String(args[0]));
+      const message = formatBaileysLog(args);
+      if (message) log.error(message);
     },
   };
   return logger;
