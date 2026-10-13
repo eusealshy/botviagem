@@ -215,15 +215,59 @@ function silentLogger(): {
     trace: () => undefined,
     debug: () => undefined,
     info: () => undefined,
-    warn: (...args: unknown[]) => {
-      if (args[0]) log.warn(String(args[0]));
-    },
-    error: (...args: unknown[]) => {
-      if (args[0]) log.error(String(args[0]));
-    },
-    fatal: (...args: unknown[]) => {
-      if (args[0]) log.error(String(args[0]));
-    },
+    warn: (...args: unknown[]) => emitBaileysLog("warn", args),
+    error: (...args: unknown[]) => emitBaileysLog("error", args),
+    fatal: (...args: unknown[]) => emitBaileysLog("error", args),
   };
   return logger;
+}
+
+function emitBaileysLog(level: "warn" | "error", args: readonly unknown[]): void {
+  const line = formatBaileysLog(args);
+  if (line) log[level](line);
+}
+
+// Pino style is log(obj, msg). String(obj) is "[object Object]" and drops msg and stack.
+export function formatBaileysLog(args: readonly unknown[]): string | undefined {
+  const head = args[0];
+  if (!head) return undefined;
+  if (typeof head === "string") return head;
+
+  const message = typeof args[1] === "string" && args[1] ? args[1] : undefined;
+  if (typeof head !== "object") return joinLog(message, String(head));
+
+  const record = head as Record<string, unknown>;
+  const nested = joinLog(
+    describeLogValue(record.err),
+    describeLogValue(record.error),
+    describeLogValue(record.trace),
+  );
+  const self = nested ? undefined : describeLogValue(head);
+  return joinLog(message, nested, self);
+}
+
+function joinLog(...parts: Array<string | undefined>): string | undefined {
+  const seen = new Set<string>();
+  const lines: string[] = [];
+  for (const part of parts) {
+    if (!part || seen.has(part)) continue;
+    seen.add(part);
+    lines.push(part);
+  }
+  return lines.length > 0 ? lines.join("\n") : undefined;
+}
+
+function describeLogValue(value: unknown): string | undefined {
+  if (typeof value === "string") {
+    const text = value.trim();
+    return text || undefined;
+  }
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  if (!value || typeof value !== "object") return undefined;
+
+  const record = value as { message?: unknown; stack?: unknown };
+  const message = typeof record.message === "string" && record.message.trim() ? record.message : undefined;
+  const stack = typeof record.stack === "string" && record.stack.trim() ? record.stack : undefined;
+  if (stack && message && !stack.includes(message)) return `${message}\n${stack}`;
+  return stack ?? message;
 }
